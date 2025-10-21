@@ -254,15 +254,3 @@ class BatchInvariantMultiHeadAttention(nn.Module):
         # Note: We don't return attention weights in batch-invariant mode
         # to avoid additional computation
         return output, None if need_weights else None
-
-
-# Register batch-invariant attention operations
-def register_attention_ops():
-    """
-    Register batch-invariant attention operations with torch.library.
-
-    This allows automatic replacement of standard attention operations
-    when batch-invariant mode is enabled.
-    """
-    # TODO: Implement torch.library registration
-    pass

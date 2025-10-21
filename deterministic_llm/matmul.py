@@ -216,15 +216,3 @@ class BatchInvariantLinear(torch.nn.Module):
         else:
             # Standard linear
             return torch.nn.functional.linear(input, self.weight, self.bias)
-
-
-# Register batch-invariant matmul operations
-def register_matmul_ops():
-    """
-    Register batch-invariant matmul operations with torch.library.
-
-    This allows automatic replacement of standard matmul operations
-    when batch-invariant mode is enabled.
-    """
-    # TODO: Implement torch.library registration
-    pass

@@ -138,15 +138,3 @@ class BatchInvariantSiLU(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return batch_invariant_silu(x)
-
-
-# Register activation functions
-def register_activation_ops():
-    """
-    Register batch-invariant activation operations with torch.library.
-
-    This allows automatic replacement of standard activation operations
-    when batch-invariant mode is enabled.
-    """
-    # TODO: Implement torch.library registration for automatic replacement
-    pass

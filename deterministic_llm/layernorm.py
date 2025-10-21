@@ -169,15 +169,3 @@ def standard_layernorm(
     return torch.nn.functional.layer_norm(
         x, normalized_shape, weight, bias, eps
     )
-
-
-# Register the batch-invariant version as a custom operation
-def register_layernorm_ops():
-    """
-    Register batch-invariant LayerNorm operations with torch.library.
-
-    This allows automatic replacement of standard LayerNorm operations
-    when batch-invariant mode is enabled.
-    """
-    # TODO: Implement torch.library registration for automatic replacement
-    pass

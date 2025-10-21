@@ -98,6 +98,7 @@ class DeterministicInferenceEngine:
         temperature: float = 0.0,
         top_k: Optional[int] = None,
         top_p: Optional[float] = None,
+        eos_token_id: Optional[int] = None,
         **kwargs
     ) -> Union[torch.Tensor, str]:
         """
@@ -110,6 +111,7 @@ class DeterministicInferenceEngine:
             temperature: Sampling temperature (use 0.0 for greedy/deterministic)
             top_k: Top-k sampling parameter
             top_p: Top-p (nucleus) sampling parameter
+            eos_token_id: EOS token ID for early stopping (auto-detected from tokenizer if not provided)
             **kwargs: Additional arguments
 
         Returns:
@@ -146,10 +148,15 @@ class DeterministicInferenceEngine:
             if input_ids.device != self.device:
                 input_ids = input_ids.to(self.device)
 
+        # Auto-detect EOS token from tokenizer if not provided
+        if eos_token_id is None and tokenizer is not None:
+            if hasattr(tokenizer, 'eos_token_id'):
+                eos_token_id = tokenizer.eos_token_id
+
         # Generate with batch-invariant mode (greedy only)
         with set_batch_invariant_mode(True):
             with KernelReplacementContext():
-                output_ids = self._greedy_generate(input_ids, max_length)
+                output_ids = self._greedy_generate(input_ids, max_length, eos_token_id)
 
         # Decode if needed
         if return_text and tokenizer is not None:
@@ -161,19 +168,24 @@ class DeterministicInferenceEngine:
         self,
         input_ids: torch.Tensor,
         max_length: int,
+        eos_token_id: Optional[int] = None,
     ) -> torch.Tensor:
         """
-        Greedy decoding (deterministic).
+        Greedy decoding (deterministic) with EOS token support.
 
         Args:
             input_ids: Input token IDs of shape (batch_size, seq_len)
             max_length: Maximum total length
+            eos_token_id: Optional EOS token ID for early stopping
 
         Returns:
-            Generated token IDs of shape (batch_size, max_length)
+            Generated token IDs of shape (batch_size, <= max_length)
         """
         batch_size = input_ids.shape[0]
         current_length = input_ids.shape[1]
+
+        # Track which sequences have finished (for EOS handling)
+        finished = torch.zeros(batch_size, dtype=torch.bool, device=input_ids.device)
 
         # Generate tokens one by one
         while current_length < max_length:
@@ -198,37 +210,16 @@ class DeterministicInferenceEngine:
             input_ids = torch.cat([input_ids, next_token], dim=-1)
             current_length += 1
 
-            # Check for EOS token (if applicable)
-            # TODO: Add proper EOS handling
+            # Check for EOS token
+            if eos_token_id is not None:
+                # Mark sequences that just produced EOS
+                finished = finished | (next_token.squeeze(-1) == eos_token_id)
+
+                # Stop if all sequences have finished
+                if finished.all():
+                    break
 
         return input_ids
-
-    def _sample_generate(
-        self,
-        input_ids: torch.Tensor,
-        max_length: int,
-        temperature: float,
-        top_k: Optional[int],
-        top_p: Optional[float],
-    ) -> torch.Tensor:
-        """
-        Sampling-based generation (non-deterministic unless seed is fixed).
-
-        Args:
-            input_ids: Input token IDs
-            max_length: Maximum length
-            temperature: Sampling temperature
-            top_k: Top-k filtering
-            top_p: Nucleus sampling threshold
-
-        Returns:
-            Generated token IDs
-        """
-        # TODO: Implement deterministic sampling with fixed RNG
-        raise NotImplementedError(
-            "Sampling-based generation is not yet implemented. "
-            "Use temperature=0.0 for deterministic greedy generation."
-        )
 
     def verify_determinism(
         self,

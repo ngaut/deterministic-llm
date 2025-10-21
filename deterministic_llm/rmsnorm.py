@@ -151,17 +151,3 @@ def standard_rmsnorm(
         x_normalized = x_normalized * weight
 
     return x_normalized
-
-
-# Register the batch-invariant version as a custom operation
-# This will be used by the kernel replacement system
-def register_rmsnorm_ops():
-    """
-    Register batch-invariant RMSNorm operations with torch.library.
-
-    This allows automatic replacement of standard RMSNorm operations
-    when batch-invariant mode is enabled.
-    """
-    # TODO: Implement torch.library registration
-    # This will enable automatic kernel replacement
-    pass
