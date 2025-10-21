@@ -64,7 +64,7 @@ python web_ui.py
 
 Then open http://localhost:7860 in your browser!
 
-See [SETUP_WEB_UI.md](SETUP_WEB_UI.md) for detailed setup instructions.
+See [WEB_UI.md](WEB_UI.md) for detailed web UI documentation.
 
 ### Option 2: Python API
 
