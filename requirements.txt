@@ -1,0 +1,10 @@
+# Core dependencies for deterministic-llm
+torch>=1.9.0
+transformers>=4.0.0
+
+# Web UI
+gradio>=4.0.0
+
+# Optional: for development
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
